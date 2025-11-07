@@ -133,7 +133,10 @@ class AIService: ObservableObject {
 
         // Schedule-related intents
         if lowercased.contains("schedule") || lowercased.contains("meeting") || lowercased.contains("appointment") {
-            return .scheduleEvent
+            if let eventInfo = extractEventInfo(from: text) {
+                return .scheduleEvent(title: eventInfo.title, date: eventInfo.date, duration: eventInfo.duration)
+            }
+            return .scheduleEvent(title: "New Event", date: nil, duration: 3600)
         }
 
         // Message-related intents
@@ -231,6 +234,99 @@ class AIService: ObservableObject {
         return "New Task"
     }
 
+    private func extractEventInfo(from text: String) -> (title: String, date: Date?, duration: TimeInterval)? {
+        let lowercased = text.lowercased()
+
+        // Extract title - everything before time indicators
+        var title = text
+        let timeKeywords = ["at", "on", "tomorrow", "today", "next week"]
+
+        for keyword in timeKeywords {
+            if let range = lowercased.range(of: keyword) {
+                title = String(text[..<range.lowerBound]).trimmingCharacters(in: .whitespaces)
+                // Remove schedule keywords
+                title = title.replacingOccurrences(of: "schedule", with: "", options: .caseInsensitive)
+                title = title.replacingOccurrences(of: "meeting", with: "", options: .caseInsensitive)
+                title = title.replacingOccurrences(of: "appointment", with: "", options: .caseInsensitive)
+                title = title.trimmingCharacters(in: .whitespaces)
+                break
+            }
+        }
+
+        // Parse date/time
+        var eventDate: Date?
+        var duration: TimeInterval = 3600 // Default 1 hour
+
+        // Check for "tomorrow"
+        if lowercased.contains("tomorrow") {
+            eventDate = Calendar.current.date(byAdding: .day, value: 1, to: Date())
+        }
+
+        // Check for "today"
+        if lowercased.contains("today") {
+            eventDate = Date()
+        }
+
+        // Check for specific time (e.g., "at 3pm", "at 15:00")
+        let timePatterns = [
+            "(at )?(\\d{1,2})(:|\\s)?(\\d{2})?(\\s)?(am|pm)?",
+            "(at )?(\\d{1,2})(am|pm)"
+        ]
+
+        for pattern in timePatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased)) {
+
+                // Extract hour
+                if let hourRange = Range(match.range(at: 2), in: lowercased),
+                   let hour = Int(lowercased[hourRange]) {
+
+                    var adjustedHour = hour
+
+                    // Check for AM/PM
+                    if let ampmRange = Range(match.range(at: 6), in: lowercased) {
+                        let ampm = String(lowercased[ampmRange])
+                        if ampm == "pm" && hour < 12 {
+                            adjustedHour += 12
+                        } else if ampm == "am" && hour == 12 {
+                            adjustedHour = 0
+                        }
+                    }
+
+                    // Extract minutes if present
+                    var minute = 0
+                    if let minuteRange = Range(match.range(at: 4), in: lowercased),
+                       let min = Int(lowercased[minuteRange]) {
+                        minute = min
+                    }
+
+                    // Create date with time
+                    let calendar = Calendar.current
+                    var components = calendar.dateComponents([.year, .month, .day], from: eventDate ?? Date())
+                    components.hour = adjustedHour
+                    components.minute = minute
+
+                    if let date = calendar.date(from: components) {
+                        eventDate = date
+                    }
+                }
+
+                break
+            }
+        }
+
+        // Check for duration hints
+        if lowercased.contains("30 min") || lowercased.contains("half hour") {
+            duration = 1800
+        } else if lowercased.contains("2 hour") {
+            duration = 7200
+        }
+
+        guard !title.isEmpty else { return nil }
+
+        return (title: title, date: eventDate, duration: duration)
+    }
+
     private func handleError(_ message: String) async {
         await MainActor.run {
             self.lastError = message
@@ -257,7 +353,7 @@ enum Intent {
     case createTask(title: String)
     case completeTask
     case listTasks
-    case scheduleEvent
+    case scheduleEvent(title: String, date: Date?, duration: TimeInterval)
     case checkSchedule
     case sendMessage
     case checkWeather
@@ -272,8 +368,8 @@ enum Intent {
             return "Complete task"
         case .listTasks:
             return "List tasks"
-        case .scheduleEvent:
-            return "Schedule event"
+        case .scheduleEvent(let title, _, _):
+            return "Schedule event: \(title)"
         case .checkSchedule:
             return "Check schedule"
         case .sendMessage:

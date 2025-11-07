@@ -236,6 +236,43 @@ struct VoiceInterfaceView: View {
             let tasks = taskService.fetchTasks(completed: false)
             print("Found \(tasks.count) tasks")
 
+        case .scheduleEvent(let title, let date, let duration):
+            let calendarService = CalendarService()
+
+            // Use provided date or default to 1 hour from now
+            let startDate = date ?? Date().addingTimeInterval(3600)
+            let endDate = startDate.addingTimeInterval(duration)
+
+            Task {
+                // Request permission if needed
+                if calendarService.authorizationStatus != .authorized {
+                    let granted = await calendarService.requestAccess()
+                    guard granted else {
+                        await MainActor.run {
+                            statusMessage = "Calendar access denied"
+                        }
+                        return
+                    }
+                }
+
+                // Create the event
+                let success = await calendarService.createEvent(
+                    title: title,
+                    startDate: startDate,
+                    endDate: endDate
+                )
+
+                await MainActor.run {
+                    if success {
+                        let formatter = DateFormatter()
+                        formatter.timeStyle = .short
+                        statusMessage = "Event '\(title)' scheduled for \(formatter.string(from: startDate))"
+                    } else {
+                        statusMessage = "Failed to create event"
+                    }
+                }
+            }
+
         default:
             break
         }

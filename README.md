@@ -4,7 +4,7 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 
 ## Project Status
 
-**Current Phase:** Phase 2 - Voice & AI ✅ COMPLETE
+**Current Phase:** Phase 3 - Calendar & Scheduling ✅ COMPLETE
 
 ### Phase 1: Core Foundation ✅
 
@@ -13,7 +13,6 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 - [x] HomeView with daily brief placeholder and greeting
 - [x] TaskBoardView with full CRUD functionality
 - [x] ReflectionLogView with mood tracking
-- [x] ScheduleView placeholder (Calendar integration in Phase 3)
 - [x] SettingsView with user preferences
 - [x] Dark theme with tactical color palette
 - [x] Priority-based task sorting (High/Medium/Low)
@@ -35,13 +34,25 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 - [x] **Voice-to-task creation** - Say "add task buy groceries" to create tasks hands-free
 - [x] **Mode-specific AI prompts** - Personality adapts to Operator/Companion/Strategist modes
 
-### Next Up: Phase 3 - Calendar & Scheduling
+### Phase 3: Calendar & Scheduling ✅
 
-- [ ] CalendarService with EventKit integration
-- [ ] Event creation via voice
-- [ ] Conflict detection
-- [ ] ScheduleView implementation
-- [ ] Bidirectional calendar sync
+- [x] **CalendarService** - Full EventKit integration for iOS Calendar management
+- [x] **Event creation** - Create events via UI and voice commands
+- [x] **Conflict detection** - Real-time overlap warnings when scheduling events
+- [x] **ScheduleView** - Complete calendar interface with date picker and event list
+- [x] **Bidirectional sync** - Read and write events to iOS Calendar
+- [x] **Natural language parsing** - "Schedule meeting tomorrow at 3pm" extracts time and date
+- [x] **Calendar permissions** - Elegant permission request flow
+- [x] **Event management** - Create, view, delete events with context menu
+- [x] **Voice scheduling** - Say "schedule lunch with John tomorrow at noon"
+
+### Next Up: Phase 4 - Intelligence & Notifications
+
+- [ ] NotificationService for daily brief and reminders
+- [ ] Morning brief generation with weather + tasks + events
+- [ ] Evening reflection prompts
+- [ ] Weather integration (WeatherKit or OpenWeather API)
+- [ ] Proactive notifications
 
 ## Requirements
 
@@ -110,7 +121,7 @@ BattleBuddy/
 │   ├── VoiceService.swift        # Speech-to-text/text-to-speech (Phase 2 ✅)
 │   ├── AIService.swift           # OpenAI integration (Phase 2 ✅)
 │   ├── TaskService.swift         # Task management logic (Phase 2 ✅)
-│   ├── CalendarService.swift     # EventKit wrapper (Phase 3)
+│   ├── CalendarService.swift     # EventKit wrapper (Phase 3 ✅)
 │   └── NotificationService.swift # Push notifications (Phase 4)
 └── Utilities/
     ├── ColorExtension.swift      # Theme colors
@@ -140,12 +151,15 @@ BattleBuddy/
 - Secure API key storage in Keychain
 - Service layer architecture for clean separation of concerns
 
-### Phase 3: Calendar & Scheduling
+### Phase 3: Calendar & Scheduling ✅
 
 - iOS Calendar integration via EventKit
-- Event creation via voice
-- Conflict detection
-- Schedule display
+- Event creation via UI and voice commands
+- Real-time conflict detection with overlap warnings
+- Complete schedule display with graphical date picker
+- Natural language date/time parsing
+- Bidirectional calendar sync (read/write)
+- Calendar permission management
 
 ### Phase 4: Intelligence & Notifications
 
@@ -195,7 +209,8 @@ BattleBuddy/
 **Voice Commands:**
 - "Add task [name]" - Creates a new task
 - "List my tasks" - Shows your tasks
-- "What's on my schedule?" - Shows calendar events (Phase 3)
+- "Schedule [event] tomorrow at [time]" - Creates a calendar event
+- "What's on my schedule?" - Shows calendar events
 - Or just chat naturally!
 
 ### Creating Tasks
@@ -212,6 +227,24 @@ BattleBuddy/
 5. Tap "Add"
 
 Tasks are automatically sorted by priority (High → Medium → Low) and completion status.
+
+### Scheduling Events (Phase 3)
+
+**Via Voice:**
+- "Schedule meeting with team tomorrow at 3pm"
+- "Schedule lunch at noon today"
+- "Schedule dentist appointment next Monday at 10am"
+
+**Via UI:**
+1. Go to the "Schedule" tab
+2. Grant calendar permissions if prompted
+3. Select a date from the calendar
+4. Tap the floating "+" button
+5. Enter event details (title, time, location, notes)
+6. The app will warn you if there are conflicts
+7. Tap "Add"
+
+Events are synced with your iOS Calendar and visible across all your devices.
 
 ### Daily Reflections
 
@@ -256,8 +289,8 @@ Reflections are stored chronologically with mood emoji indicators.
 
 ## Known Limitations (MVP)
 
-- No calendar integration yet (Phase 3)
 - No notifications yet (Phase 4)
+- No weather integration yet (Phase 4)
 - No iMessage integration yet (Phase 5)
 - Portrait orientation only
 - iPhone only (no iPad optimization)
@@ -284,6 +317,6 @@ Copyright © 2025. All rights reserved.
 
 ---
 
-**Built with:** Swift 5.9, SwiftUI, Core Data, iOS Speech Framework, AVFoundation
-**Status:** Phase 2 Complete - Voice & AI Fully Operational
-**Version:** 2.0.0 (MVP)
+**Built with:** Swift 5.9, SwiftUI, Core Data, EventKit, iOS Speech Framework, AVFoundation
+**Status:** Phase 3 Complete - Calendar & Scheduling Operational
+**Version:** 3.0.0 (MVP)
