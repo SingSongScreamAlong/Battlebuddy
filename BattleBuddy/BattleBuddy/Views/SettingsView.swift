@@ -132,7 +132,10 @@ struct SettingsView: View {
         let prefs = UserPreferencesEntity.fetchOrCreate(context: viewContext)
         preferences = prefs
         name = prefs.name
-        openAIKey = prefs.openAIKey ?? ""
+
+        // Load API key from Keychain (secure storage)
+        openAIKey = KeychainHelper.shared.openAIKey ?? ""
+
         morningBriefTime = prefs.morningBriefTime
         eveningReflectionTime = prefs.eveningReflectionTime
 
@@ -146,7 +149,10 @@ struct SettingsView: View {
         guard let prefs = preferences else { return }
 
         prefs.name = name
-        prefs.openAIKey = openAIKey.isEmpty ? nil : openAIKey
+
+        // Save API key to Keychain (secure storage)
+        KeychainHelper.shared.openAIKey = openAIKey.isEmpty ? nil : openAIKey
+
         prefs.morningBriefTime = morningBriefTime
         prefs.eveningReflectionTime = eveningReflectionTime
         prefs.defaultMode = appState.currentMode.rawValue.lowercased()

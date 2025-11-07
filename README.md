@@ -4,9 +4,9 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 
 ## Project Status
 
-**Current Phase:** Phase 1 - Core Foundation ✅ COMPLETE
+**Current Phase:** Phase 2 - Voice & AI ✅ COMPLETE
 
-### Completed Features
+### Phase 1: Core Foundation ✅
 
 - [x] SwiftUI app structure with TabView navigation
 - [x] Core Data models (Task, UserPreferences, ConversationEntry, ReflectionLog)
@@ -14,20 +14,34 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 - [x] TaskBoardView with full CRUD functionality
 - [x] ReflectionLogView with mood tracking
 - [x] ScheduleView placeholder (Calendar integration in Phase 3)
-- [x] VoiceInterfaceView placeholder (Voice services in Phase 2)
 - [x] SettingsView with user preferences
 - [x] Dark theme with tactical color palette
 - [x] Priority-based task sorting (High/Medium/Low)
 - [x] Swipe-to-delete for tasks
 - [x] Mode switching system (Operator/Companion/Strategist)
 
-### Next Up: Phase 2 - Voice & AI
+### Phase 2: Voice & AI ✅
 
-- [ ] VoiceService implementation (speech-to-text, text-to-speech)
-- [ ] OpenAI GPT-4 API integration
-- [ ] Real-time voice conversation
-- [ ] Intent parsing for voice commands
-- [ ] Animated waveform visualization
+- [x] **VoiceService** - Full speech-to-text and text-to-speech integration using iOS Speech Framework
+- [x] **AIService** - OpenAI GPT-4 API client with conversation context and streaming support
+- [x] **Real-time voice interface** - Tap-and-hold mic button with live transcription preview
+- [x] **Intent parsing** - Extracts commands like "add task", "list tasks" from natural language
+- [x] **Animated waveform** - Real-time audio level visualization during listening/speaking
+- [x] **Conversation history** - Persistent chat history stored in Core Data with context management
+- [x] **Permission flow** - Elegant microphone permission request UI
+- [x] **Keychain security** - Secure API key storage using iOS Keychain
+- [x] **Service layer architecture** - TaskService abstraction for cleaner code organization
+- [x] **Error handling** - User-friendly error banners with retry logic
+- [x] **Voice-to-task creation** - Say "add task buy groceries" to create tasks hands-free
+- [x] **Mode-specific AI prompts** - Personality adapts to Operator/Companion/Strategist modes
+
+### Next Up: Phase 3 - Calendar & Scheduling
+
+- [ ] CalendarService with EventKit integration
+- [ ] Event creation via voice
+- [ ] Conflict detection
+- [ ] ScheduleView implementation
+- [ ] Bidirectional calendar sync
 
 ## Requirements
 
@@ -51,13 +65,15 @@ cd Battlebuddy
 open BattleBuddy/BattleBuddy.xcodeproj
 ```
 
-### 3. Configure API Keys (Phase 2+)
+### 3. Configure API Keys
 
-For Phase 2 AI integration, you'll need an OpenAI API key:
+**Required for Phase 2 AI features:**
 
 1. Get your API key from [platform.openai.com](https://platform.openai.com)
-2. Open the app and go to Settings tab
-3. Enter your API key in the "OpenAI API Key" field
+2. Build and run the app
+3. Go to Settings tab
+4. Enter your API key in the "OpenAI API Key" field (stored securely in Keychain)
+5. Go to Voice tab and grant microphone permissions when prompted
 
 ### 4. Build and Run
 
@@ -90,14 +106,15 @@ BattleBuddy/
 │   ├── ScheduleView.swift        # Calendar integration (Phase 3)
 │   ├── ReflectionLogView.swift   # Daily mood tracking
 │   └── SettingsView.swift        # User preferences
-├── Services/                     # Coming in Phase 2+
-│   ├── VoiceService.swift        # Speech-to-text/text-to-speech
-│   ├── AIService.swift           # OpenAI integration
-│   ├── TaskService.swift         # Task management logic
-│   ├── CalendarService.swift     # EventKit wrapper
-│   └── NotificationService.swift # Push notifications
+├── Services/
+│   ├── VoiceService.swift        # Speech-to-text/text-to-speech (Phase 2 ✅)
+│   ├── AIService.swift           # OpenAI integration (Phase 2 ✅)
+│   ├── TaskService.swift         # Task management logic (Phase 2 ✅)
+│   ├── CalendarService.swift     # EventKit wrapper (Phase 3)
+│   └── NotificationService.swift # Push notifications (Phase 4)
 └── Utilities/
-    └── ColorExtension.swift      # Theme colors
+    ├── ColorExtension.swift      # Theme colors
+    └── KeychainHelper.swift      # Secure API key storage (Phase 2 ✅)
 ```
 
 ## Features by Phase
@@ -111,13 +128,17 @@ BattleBuddy/
 - User preferences
 - Mode selection (Operator/Companion/Strategist)
 
-### Phase 2: Voice & AI (Next)
+### Phase 2: Voice & AI ✅
 
-- Speech-to-text input
-- Text-to-speech output
-- OpenAI GPT-4 integration
-- Conversational AI with context
-- Intent parsing for commands
+- Speech-to-text input using iOS Speech Framework
+- Text-to-speech output using AVSpeechSynthesizer
+- OpenAI GPT-4 API integration with context management
+- Conversational AI with mode-specific personalities
+- Intent parsing for voice commands ("add task", "list tasks", etc.)
+- Real-time waveform visualization
+- Microphone permission handling
+- Secure API key storage in Keychain
+- Service layer architecture for clean separation of concerns
 
 ### Phase 3: Calendar & Scheduling
 
@@ -162,8 +183,28 @@ BattleBuddy/
 
 ## Usage
 
+### Voice Conversations (Phase 2)
+
+1. Go to the "Voice" tab
+2. Grant microphone permissions if prompted
+3. **Tap and hold** the microphone button
+4. Speak your message or command
+5. Release to send
+6. BattleBuddy will process, respond, and speak the answer
+
+**Voice Commands:**
+- "Add task [name]" - Creates a new task
+- "List my tasks" - Shows your tasks
+- "What's on my schedule?" - Shows calendar events (Phase 3)
+- Or just chat naturally!
+
 ### Creating Tasks
 
+**Via Voice:**
+- "Add task buy groceries"
+- "Create a task to call mom"
+
+**Via UI:**
 1. Go to the "Tasks" tab
 2. Tap the floating "+" button
 3. Enter task title and select priority
@@ -186,9 +227,9 @@ Reflections are stored chronologically with mood emoji indicators.
 
 1. Go to the "Settings" tab
 2. Set your name for personalized greetings
-3. Choose your default AI mode
+3. Choose your default AI mode (Operator/Companion/Strategist)
 4. Configure notification times
-5. Add your OpenAI API key (Phase 2)
+5. Add your OpenAI API key (required for AI features)
 
 ## Development Notes
 
@@ -215,12 +256,13 @@ Reflections are stored chronologically with mood emoji indicators.
 
 ## Known Limitations (MVP)
 
-- No voice functionality yet (Phase 2)
 - No calendar integration yet (Phase 3)
-- No AI conversations yet (Phase 2)
 - No notifications yet (Phase 4)
+- No iMessage integration yet (Phase 5)
 - Portrait orientation only
 - iPhone only (no iPad optimization)
+- Requires OpenAI API key (not included)
+- Internet connection required for AI features
 
 ## Future Enhancements (Post-MVP)
 
@@ -242,6 +284,6 @@ Copyright © 2025. All rights reserved.
 
 ---
 
-**Built with:** Swift 5.9, SwiftUI, Core Data
-**Status:** Phase 1 Complete - Ready for Phase 2
-**Version:** 1.0.0 (MVP)
+**Built with:** Swift 5.9, SwiftUI, Core Data, iOS Speech Framework, AVFoundation
+**Status:** Phase 2 Complete - Voice & AI Fully Operational
+**Version:** 2.0.0 (MVP)

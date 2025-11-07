@@ -13,7 +13,6 @@ public class UserPreferencesEntity: NSManagedObject {
     @NSManaged public var morningBriefTime: Date
     @NSManaged public var eveningReflectionTime: Date
     @NSManaged public var defaultMode: String
-    @NSManaged public var openAIKey: String?
 
     // Fetch or create singleton preferences
     static func fetchOrCreate(context: NSManagedObjectContext) -> UserPreferencesEntity {

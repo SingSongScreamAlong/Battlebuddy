@@ -14,7 +14,6 @@
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="morningBriefTime" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String" defaultValueString="User"/>
-        <attribute name="openAIKey" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ConversationEntryEntity" representedClassName="ConversationEntryEntity" syncable="YES">
         <attribute name="aiResponse" attributeType="String"/>
