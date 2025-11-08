@@ -21,6 +21,16 @@ struct HomeView: View {
         animation: .default)
     private var tasks: FetchedResults<TaskEntity>
 
+    @State private var dailyBrief: DailyBrief?
+    @State private var isLoadingBrief = false
+    @StateObject private var voiceService = VoiceService()
+    @StateObject private var briefService: DailyBriefService
+
+    init() {
+        let context = PersistenceController.shared.container.viewContext
+        _briefService = StateObject(wrappedValue: DailyBriefService(context: context))
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -58,8 +68,13 @@ struct HomeView: View {
                     .padding(.top, 20)
 
                     // Daily Brief Card
-                    DailyBriefCard()
-                        .padding(.horizontal)
+                    DailyBriefCard(
+                        brief: dailyBrief,
+                        isLoading: isLoadingBrief,
+                        onRefresh: { loadDailyBrief() },
+                        onSpeak: { speakDailyBrief() }
+                    )
+                    .padding(.horizontal)
 
                     // Priority Tasks
                     VStack(alignment: .leading, spacing: 12) {
@@ -121,7 +136,27 @@ struct HomeView: View {
                 }
             }
             .background(Color.bbBackground.ignoresSafeArea())
+            .onAppear {
+                loadDailyBrief()
+            }
         }
+    }
+
+    private func loadDailyBrief() {
+        isLoadingBrief = true
+
+        Task {
+            let brief = await briefService.generateBrief()
+            await MainActor.run {
+                self.dailyBrief = brief
+                self.isLoadingBrief = false
+            }
+        }
+    }
+
+    private func speakDailyBrief() {
+        guard let brief = dailyBrief else { return }
+        voiceService.speak(brief.formattedText)
     }
 
     private func greetingMessage() -> String {
@@ -144,10 +179,16 @@ struct HomeView: View {
 
 // MARK: - Daily Brief Card
 struct DailyBriefCard: View {
+    let brief: DailyBrief?
+    let isLoading: Bool
+    let onRefresh: () -> Void
+    let onSpeak: () -> Void
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Header
             HStack {
-                Image(systemName: "sun.max.fill")
+                Image(systemName: weatherIcon)
                     .foregroundColor(.bbWarning)
                     .font(.system(size: 24))
 
@@ -163,38 +204,131 @@ struct DailyBriefCard: View {
 
                 Spacer()
 
-                Button(action: {
-                    // Play daily brief
-                }) {
+                // Refresh button
+                Button(action: onRefresh) {
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .bbAccent))
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 20))
+                            .foregroundColor(.bbTextSecondary)
+                    }
+                }
+                .disabled(isLoading)
+
+                // Speak button
+                Button(action: onSpeak) {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 32))
                         .foregroundColor(.bbAccent)
                 }
+                .disabled(brief == nil)
             }
 
             Divider()
                 .background(Color.bbSecondary.opacity(0.3))
 
-            // Weather placeholder
-            HStack(spacing: 12) {
-                Image(systemName: "cloud.sun.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(.bbAccent)
+            if let brief = brief {
+                // Weather
+                if let weather = brief.weather {
+                    HStack(spacing: 12) {
+                        Image(systemName: weatherIconForCondition(weather.condition))
+                            .font(.system(size: 20))
+                            .foregroundColor(.bbAccent)
 
-                Text("Weather data coming soon")
-                    .font(.system(size: 14))
-                    .foregroundColor(.bbTextSecondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(weather.temperatureString)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.bbTextPrimary)
+
+                            Text(weather.description)
+                                .font(.system(size: 14))
+                                .foregroundColor(.bbTextSecondary)
+                        }
+
+                        Spacer()
+
+                        Text(weather.cityName)
+                            .font(.system(size: 12))
+                            .foregroundColor(.bbTextSecondary)
+                    }
+                } else {
+                    HStack(spacing: 12) {
+                        Image(systemName: "cloud.sun.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.bbSecondary)
+
+                        Text("Weather unavailable")
+                            .font(.system(size: 14))
+                            .foregroundColor(.bbTextSecondary)
+                    }
+                }
+
+                Divider()
+                    .background(Color.bbSecondary.opacity(0.3))
+
+                // Summary
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(brief.scheduleSummary)
+                        .font(.system(size: 14))
+                        .foregroundColor(.bbTextSecondary)
+
+                    Text(brief.taskSummary)
+                        .font(.system(size: 14))
+                        .foregroundColor(.bbTextSecondary)
+
+                    Text(brief.motivationalMessage)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.bbAccent)
+                }
+            } else {
+                // Loading state
+                if isLoading {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .bbAccent))
+                        Spacer()
+                    }
+                    .padding()
+                } else {
+                    Text("Tap refresh to load your daily brief")
+                        .font(.system(size: 14))
+                        .foregroundColor(.bbTextSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
             }
-
-            // Summary
-            Text("You have 0 events scheduled today. Ready to tackle your tasks!")
-                .font(.system(size: 14))
-                .foregroundColor(.bbTextSecondary)
-                .lineLimit(3)
         }
         .padding()
         .background(Color.bbCardBackground)
         .cornerRadius(16)
+    }
+
+    private var weatherIcon: String {
+        if let weather = brief?.weather {
+            return weatherIconForCondition(weather.condition)
+        }
+        return "sun.max.fill"
+    }
+
+    private func weatherIconForCondition(_ condition: String) -> String {
+        switch condition.lowercased() {
+        case "clear":
+            return "sun.max.fill"
+        case "clouds":
+            return "cloud.fill"
+        case "rain", "drizzle":
+            return "cloud.rain.fill"
+        case "thunderstorm":
+            return "cloud.bolt.fill"
+        case "snow":
+            return "cloud.snow.fill"
+        case "mist", "fog", "haze":
+            return "cloud.fog.fill"
+        default:
+            return "cloud.sun.fill"
+        }
     }
 }
 

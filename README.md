@@ -4,7 +4,7 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 
 ## Project Status
 
-**Current Phase:** Phase 3 - Calendar & Scheduling ✅ COMPLETE
+**Current Phase:** Phase 4 - Intelligence & Notifications ✅ COMPLETE
 
 ### Phase 1: Core Foundation ✅
 
@@ -46,13 +46,27 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 - [x] **Event management** - Create, view, delete events with context menu
 - [x] **Voice scheduling** - Say "schedule lunch with John tomorrow at noon"
 
-### Next Up: Phase 4 - Intelligence & Notifications
+### Phase 4: Intelligence & Notifications ✅
 
-- [ ] NotificationService for daily brief and reminders
-- [ ] Morning brief generation with weather + tasks + events
-- [ ] Evening reflection prompts
-- [ ] Weather integration (WeatherKit or OpenWeather API)
-- [ ] Proactive notifications
+- [x] **NotificationService** - Full UNUserNotificationCenter integration with authorization
+- [x] **WeatherService** - OpenWeather API integration with location-based weather data
+- [x] **DailyBriefService** - Intelligent brief generation combining weather, tasks, and events
+- [x] **Morning brief notifications** - Scheduled daily notifications with custom times
+- [x] **Evening reflection prompts** - Scheduled daily reflection reminders
+- [x] **Live daily brief in HomeView** - Real-time weather, task summary, schedule overview
+- [x] **Speak daily brief** - Text-to-speech playback of the daily brief
+- [x] **Weather display** - Temperature, conditions, and location-aware forecasts
+- [x] **Notification permissions** - Elegant permission request flow in Settings
+- [x] **API key management** - Secure Keychain storage for OpenWeather API key
+- [x] **Proactive scheduling** - Automatic notification scheduling based on user preferences
+
+### Next Up: Phase 5 - Polish & Integration
+
+- [ ] iMessage integration for sending texts
+- [ ] Smooth animations and transitions
+- [ ] Enhanced voice waveform visualization
+- [ ] Context memory system improvements
+- [ ] Final UI polish and refinements
 
 ## Requirements
 
@@ -78,23 +92,30 @@ open BattleBuddy/BattleBuddy.xcodeproj
 
 ### 3. Configure API Keys
 
-**Required for Phase 2 AI features:**
+**Required for AI and Weather features:**
 
+**OpenAI API Key (required for Phase 2+ AI features):**
 1. Get your API key from [platform.openai.com](https://platform.openai.com)
 2. Build and run the app
 3. Go to Settings tab
 4. Enter your API key in the "OpenAI API Key" field (stored securely in Keychain)
-5. Go to Voice tab and grant microphone permissions when prompted
+
+**OpenWeather API Key (optional for Phase 4 weather features):**
+1. Get your free API key from [openweathermap.org](https://openweathermap.org/api)
+2. Go to Settings tab
+3. Enter your API key in the "OpenWeather API Key" field (stored securely in Keychain)
+4. Grant location permissions when prompted for weather data
 
 ### 4. Build and Run
 
 1. Select your target device (iPhone simulator or physical device)
 2. Press `Cmd + R` to build and run
 3. Grant permissions when prompted:
-   - Microphone (Phase 2)
-   - Calendar (Phase 3)
-   - Reminders (Phase 3)
-   - Notifications (Phase 4)
+   - Microphone (Phase 2 - for voice commands)
+   - Calendar (Phase 3 - for event management)
+   - Reminders (Phase 3 - for task sync)
+   - Notifications (Phase 4 - for daily brief and reminders)
+   - Location (Phase 4 - for weather data)
 
 ## Project Structure
 
@@ -122,7 +143,9 @@ BattleBuddy/
 │   ├── AIService.swift           # OpenAI integration (Phase 2 ✅)
 │   ├── TaskService.swift         # Task management logic (Phase 2 ✅)
 │   ├── CalendarService.swift     # EventKit wrapper (Phase 3 ✅)
-│   └── NotificationService.swift # Push notifications (Phase 4)
+│   ├── NotificationService.swift # Local notifications (Phase 4 ✅)
+│   ├── WeatherService.swift      # OpenWeather API integration (Phase 4 ✅)
+│   └── DailyBriefService.swift   # Intelligent brief generation (Phase 4 ✅)
 └── Utilities/
     ├── ColorExtension.swift      # Theme colors
     └── KeychainHelper.swift      # Secure API key storage (Phase 2 ✅)
@@ -161,12 +184,18 @@ BattleBuddy/
 - Bidirectional calendar sync (read/write)
 - Calendar permission management
 
-### Phase 4: Intelligence & Notifications
+### Phase 4: Intelligence & Notifications ✅
 
-- Daily morning brief generation
-- Evening reflection prompts
-- Proactive notifications
-- Weather integration
+- Local notification system with UNUserNotificationCenter
+- OpenWeather API integration for real-time weather data
+- Intelligent daily brief generation combining weather, tasks, and calendar
+- Morning brief notifications with custom scheduling
+- Evening reflection prompt notifications
+- Live daily brief display in HomeView with refresh and speak features
+- Weather display with temperature, conditions, and location
+- Notification permission management in Settings
+- Proactive scheduling based on user preferences
+- Location-based weather forecasting
 
 ### Phase 5: Polish & Integration
 
@@ -289,13 +318,13 @@ Reflections are stored chronologically with mood emoji indicators.
 
 ## Known Limitations (MVP)
 
-- No notifications yet (Phase 4)
-- No weather integration yet (Phase 4)
 - No iMessage integration yet (Phase 5)
 - Portrait orientation only
 - iPhone only (no iPad optimization)
 - Requires OpenAI API key (not included)
-- Internet connection required for AI features
+- Requires OpenWeather API key for weather features (not included)
+- Internet connection required for AI and weather features
+- Location permission required for weather data
 
 ## Future Enhancements (Post-MVP)
 
@@ -317,6 +346,6 @@ Copyright © 2025. All rights reserved.
 
 ---
 
-**Built with:** Swift 5.9, SwiftUI, Core Data, EventKit, iOS Speech Framework, AVFoundation
-**Status:** Phase 3 Complete - Calendar & Scheduling Operational
-**Version:** 3.0.0 (MVP)
+**Built with:** Swift 5.9, SwiftUI, Core Data, EventKit, UserNotifications, CoreLocation, iOS Speech Framework, AVFoundation
+**Status:** Phase 4 Complete - Intelligence & Notifications Operational
+**Version:** 4.0.0 (MVP)

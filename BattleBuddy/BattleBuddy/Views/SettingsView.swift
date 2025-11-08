@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import UserNotifications
 
 struct SettingsView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -15,8 +16,12 @@ struct SettingsView: View {
     @State private var preferences: UserPreferencesEntity?
     @State private var name = ""
     @State private var openAIKey = ""
+    @State private var weatherAPIKey = ""
     @State private var morningBriefTime = Date()
     @State private var eveningReflectionTime = Date()
+    @State private var notificationsEnabled = false
+
+    @StateObject private var notificationService = NotificationService()
 
     var body: some View {
         NavigationView {
@@ -60,9 +65,44 @@ struct SettingsView: View {
 
                 // Notifications Section
                 Section(header: Text("Notifications")) {
-                    DatePicker("Morning Brief", selection: $morningBriefTime, displayedComponents: .hourAndMinute)
+                    // Permission status
+                    HStack {
+                        Text("Status")
+                        Spacer()
+                        Text(notificationStatusText)
+                            .foregroundColor(notificationStatusColor)
+                    }
 
-                    DatePicker("Evening Reflection", selection: $eveningReflectionTime, displayedComponents: .hourAndMinute)
+                    if notificationService.authorizationStatus != .authorized {
+                        Button(action: {
+                            requestNotificationPermission()
+                        }) {
+                            HStack {
+                                Image(systemName: "bell.badge")
+                                Text("Enable Notifications")
+                            }
+                            .foregroundColor(.bbAccent)
+                        }
+                    }
+
+                    if notificationService.authorizationStatus == .authorized {
+                        Toggle("Daily Notifications", isOn: $notificationsEnabled)
+                            .onChange(of: notificationsEnabled) { enabled in
+                                updateNotificationSchedule()
+                            }
+
+                        if notificationsEnabled {
+                            DatePicker("Morning Brief", selection: $morningBriefTime, displayedComponents: .hourAndMinute)
+                                .onChange(of: morningBriefTime) { _ in
+                                    updateNotificationSchedule()
+                                }
+
+                            DatePicker("Evening Reflection", selection: $eveningReflectionTime, displayedComponents: .hourAndMinute)
+                                .onChange(of: eveningReflectionTime) { _ in
+                                    updateNotificationSchedule()
+                                }
+                        }
+                    }
                 }
 
                 // API Configuration
@@ -82,6 +122,22 @@ struct SettingsView: View {
                             .foregroundColor(.bbTextSecondary)
                     }
                     .padding(.vertical, 4)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("OpenWeather API Key")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.bbTextPrimary)
+
+                        SecureField("Enter API key", text: $weatherAPIKey)
+                            .textContentType(.password)
+                            .autocapitalization(.none)
+                            .foregroundColor(.bbTextPrimary)
+
+                        Text("Required for weather in daily brief. Get your free key at openweathermap.org")
+                            .font(.system(size: 12))
+                            .foregroundColor(.bbTextSecondary)
+                    }
+                    .padding(.vertical, 4)
                 }
 
                 // App Info Section
@@ -89,14 +145,14 @@ struct SettingsView: View {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("1.0.0 (MVP)")
+                        Text("4.0.0 (MVP)")
                             .foregroundColor(.bbTextSecondary)
                     }
 
                     HStack {
                         Text("Phase")
                         Spacer()
-                        Text("Phase 1 - Foundation")
+                        Text("Phase 4 - Intelligence")
                             .foregroundColor(.bbTextSecondary)
                     }
                 }
@@ -122,9 +178,78 @@ struct SettingsView: View {
             }
             .onChange(of: name) { _ in savePreferences() }
             .onChange(of: openAIKey) { _ in savePreferences() }
-            .onChange(of: morningBriefTime) { _ in savePreferences() }
-            .onChange(of: eveningReflectionTime) { _ in savePreferences() }
+            .onChange(of: weatherAPIKey) { _ in saveWeatherAPIKey() }
             .onChange(of: appState.currentMode) { _ in savePreferences() }
+        }
+    }
+
+    // MARK: - Notification Helpers
+    private var notificationStatusText: String {
+        switch notificationService.authorizationStatus {
+        case .authorized:
+            return "Enabled"
+        case .denied:
+            return "Denied"
+        case .notDetermined:
+            return "Not Set"
+        case .provisional:
+            return "Provisional"
+        case .ephemeral:
+            return "Ephemeral"
+        @unknown default:
+            return "Unknown"
+        }
+    }
+
+    private var notificationStatusColor: Color {
+        switch notificationService.authorizationStatus {
+        case .authorized:
+            return .bbSuccess
+        case .denied:
+            return .red
+        case .notDetermined:
+            return .bbTextSecondary
+        default:
+            return .bbTextSecondary
+        }
+    }
+
+    private func requestNotificationPermission() {
+        Task {
+            let granted = await notificationService.requestAuthorization()
+            if granted {
+                await MainActor.run {
+                    notificationsEnabled = true
+                    updateNotificationSchedule()
+                }
+            }
+        }
+    }
+
+    private func updateNotificationSchedule() {
+        guard notificationsEnabled else {
+            notificationService.cancelMorningBrief()
+            notificationService.cancelEveningReflection()
+            return
+        }
+
+        Task {
+            // Schedule morning brief
+            let morningSuccess = await notificationService.scheduleMorningBrief(time: morningBriefTime)
+            if morningSuccess {
+                print("Morning brief scheduled for \(morningBriefTime)")
+            }
+
+            // Schedule evening reflection
+            let eveningSuccess = await notificationService.scheduleEveningReflection(time: eveningReflectionTime)
+            if eveningSuccess {
+                print("Evening reflection scheduled for \(eveningReflectionTime)")
+            }
+
+            // Save preferences
+            await MainActor.run {
+                savePreferences()
+            }
         }
     }
 
@@ -133,8 +258,9 @@ struct SettingsView: View {
         preferences = prefs
         name = prefs.name
 
-        // Load API key from Keychain (secure storage)
+        // Load API keys from Keychain (secure storage)
         openAIKey = KeychainHelper.shared.openAIKey ?? ""
+        weatherAPIKey = KeychainHelper.shared.retrieve(forKey: "openweather_api_key") ?? ""
 
         morningBriefTime = prefs.morningBriefTime
         eveningReflectionTime = prefs.eveningReflectionTime
@@ -143,6 +269,17 @@ struct SettingsView: View {
         if let mode = AppState.AIMode(rawValue: prefs.defaultMode.capitalized) {
             appState.currentMode = mode
         }
+
+        // Check notification status
+        notificationService.checkAuthorizationStatus()
+
+        // Load notification preferences
+        Task {
+            let pendingNotifications = await notificationService.getPendingNotifications()
+            await MainActor.run {
+                notificationsEnabled = !pendingNotifications.isEmpty
+            }
+        }
     }
 
     private func savePreferences() {
@@ -150,7 +287,7 @@ struct SettingsView: View {
 
         prefs.name = name
 
-        // Save API key to Keychain (secure storage)
+        // Save OpenAI API key to Keychain (secure storage)
         KeychainHelper.shared.openAIKey = openAIKey.isEmpty ? nil : openAIKey
 
         prefs.morningBriefTime = morningBriefTime
@@ -158,6 +295,14 @@ struct SettingsView: View {
         prefs.defaultMode = appState.currentMode.rawValue.lowercased()
 
         PersistenceController.shared.save()
+    }
+
+    private func saveWeatherAPIKey() {
+        if weatherAPIKey.isEmpty {
+            _ = KeychainHelper.shared.delete(forKey: "openweather_api_key")
+        } else {
+            _ = KeychainHelper.shared.save(weatherAPIKey, forKey: "openweather_api_key")
+        }
     }
 
     private func modeDescription(_ mode: AppState.AIMode) -> String {
