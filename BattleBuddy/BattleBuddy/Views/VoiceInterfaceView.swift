@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import MessageUI
 
 struct VoiceInterfaceView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -14,11 +15,14 @@ struct VoiceInterfaceView: View {
 
     @StateObject private var voiceService = VoiceService()
     @StateObject private var aiService: AIService
+    @StateObject private var messageService = MessageService()
 
     @State private var showPermissionRequest = false
     @State private var currentTranscript = ""
     @State private var statusMessage = ""
     @State private var scrollToBottom = false
+    @State private var messageComposer: MFMessageComposeViewController?
+    @State private var showMessageComposer = false
 
     init() {
         let context = PersistenceController.shared.container.viewContext
@@ -150,6 +154,11 @@ struct VoiceInterfaceView: View {
                     // Permission granted
                 }
             }
+            .sheet(isPresented: $showMessageComposer) {
+                if let composer = messageComposer {
+                    MessageComposeView(messageComposer: composer, isPresented: $showMessageComposer)
+                }
+            }
             .onAppear {
                 loadConversationHistory()
                 checkPermissions()
@@ -269,6 +278,32 @@ struct VoiceInterfaceView: View {
                         statusMessage = "Event '\(title)' scheduled for \(formatter.string(from: startDate))"
                     } else {
                         statusMessage = "Failed to create event"
+                    }
+                }
+            }
+
+        case .sendMessage(let recipient, let message):
+            Task {
+                // Request contacts permission if needed
+                let granted = await messageService.requestContactsPermission()
+                guard granted else {
+                    await MainActor.run {
+                        statusMessage = "Contacts access denied. Cannot send message."
+                    }
+                    return
+                }
+
+                // Create message composer
+                if let composer = await messageService.createMessageComposer(recipient: recipient, message: message) {
+                    await MainActor.run {
+                        self.messageComposer = composer
+                        composer.messageComposeDelegate = messageService
+                        self.showMessageComposer = true
+                        statusMessage = "Opening message to \(recipient)"
+                    }
+                } else {
+                    await MainActor.run {
+                        statusMessage = messageService.lastError ?? "Could not create message"
                     }
                 }
             }
@@ -505,6 +540,36 @@ struct ErrorBanner: View {
             Spacer()
         }
         .transition(.move(edge: .top).combined(with: .opacity))
+    }
+}
+
+// MARK: - Message Compose View Wrapper
+struct MessageComposeView: UIViewControllerRepresentable {
+    let messageComposer: MFMessageComposeViewController
+    @Binding var isPresented: Bool
+
+    func makeUIViewController(context: Context) -> MFMessageComposeViewController {
+        return messageComposer
+    }
+
+    func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) {
+        // No updates needed
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    class Coordinator: NSObject, MFMessageComposeViewControllerDelegate {
+        let parent: MessageComposeView
+
+        init(parent: MessageComposeView) {
+            self.parent = parent
+        }
+
+        func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+            parent.isPresented = false
+        }
     }
 }
 

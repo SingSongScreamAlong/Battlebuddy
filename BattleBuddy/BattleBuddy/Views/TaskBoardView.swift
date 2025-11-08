@@ -130,7 +130,7 @@ struct TaskRow: View {
         HStack(spacing: 12) {
             // Complete button
             Button(action: {
-                withAnimation {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                     task.isCompleted.toggle()
                     PersistenceController.shared.save()
                 }
@@ -138,6 +138,8 @@ struct TaskRow: View {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24))
                     .foregroundColor(task.isCompleted ? .bbSuccess : .bbSecondary)
+                    .scaleEffect(task.isCompleted ? 1.0 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: task.isCompleted)
             }
             .buttonStyle(PlainButtonStyle())
 
@@ -146,6 +148,8 @@ struct TaskRow: View {
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.bbTextPrimary)
                     .strikethrough(task.isCompleted)
+                    .opacity(task.isCompleted ? 0.6 : 1.0)
+                    .animation(.easeInOut(duration: 0.3), value: task.isCompleted)
 
                 if let dueDate = task.dueDate {
                     HStack(spacing: 4) {

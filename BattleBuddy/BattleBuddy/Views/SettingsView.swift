@@ -145,14 +145,14 @@ struct SettingsView: View {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("4.0.0 (MVP)")
+                        Text("5.0.0 (MVP Complete)")
                             .foregroundColor(.bbTextSecondary)
                     }
 
                     HStack {
                         Text("Phase")
                         Spacer()
-                        Text("Phase 4 - Intelligence")
+                        Text("Phase 5 - Polish & Integration")
                             .foregroundColor(.bbTextSecondary)
                     }
                 }

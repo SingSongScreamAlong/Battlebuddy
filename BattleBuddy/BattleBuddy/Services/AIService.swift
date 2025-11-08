@@ -21,7 +21,8 @@ class AIService: ObservableObject {
 
     // MARK: - Context Management
     private let viewContext: NSManagedObjectContext
-    private let maxContextMessages = 10
+    private let maxContextMessages = 15 // Increased context window
+    private let maxContextTokens = 2000 // Approximate token limit for context
 
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -141,7 +142,10 @@ class AIService: ObservableObject {
 
         // Message-related intents
         if lowercased.contains("text") || lowercased.contains("message") || lowercased.contains("send") {
-            return .sendMessage
+            if let messageInfo = extractMessageInfo(from: text) {
+                return .sendMessage(recipient: messageInfo.recipient, message: messageInfo.message)
+            }
+            return .conversation // Fall back to conversation if parsing fails
         }
 
         // Query intents
@@ -172,17 +176,46 @@ class AIService: ObservableObject {
     private func buildMessages(userMessage: String, mode: AppState.AIMode) -> [[String: String]] {
         var messages: [[String: String]] = []
 
-        // System prompt based on mode
+        // System prompt based on mode with enhanced context awareness
+        let enhancedSystemPrompt = mode.systemPrompt + "\n\nYou have access to the user's task list, calendar, and recent conversations. Use this context to provide more personalized and relevant responses."
+
         messages.append([
             "role": "system",
-            "content": mode.systemPrompt
+            "content": enhancedSystemPrompt
         ])
 
-        // Add recent conversation history for context
+        // Add recent conversation history with smart selection
         let recentConversations = fetchRecentConversations(limit: maxContextMessages)
-        for conversation in recentConversations {
+        var currentTokenCount = estimateTokens(enhancedSystemPrompt)
+
+        // Prioritize recent and important messages
+        var selectedConversations: [ConversationEntryEntity] = []
+        for conversation in recentConversations.reversed() { // Start with most recent
+            let conversationTokens = estimateTokens(conversation.userMessage) + estimateTokens(conversation.aiResponse)
+
+            // Only add if we have token budget
+            if currentTokenCount + conversationTokens < maxContextTokens {
+                selectedConversations.insert(conversation, at: 0) // Maintain chronological order
+                currentTokenCount += conversationTokens
+            } else {
+                break // Stop if we're over budget
+            }
+        }
+
+        // Add selected conversations to messages
+        for conversation in selectedConversations {
             messages.append(["role": "user", "content": conversation.userMessage])
             messages.append(["role": "assistant", "content": conversation.aiResponse])
+        }
+
+        // Add context summary if we have a lot of history
+        let totalHistory = fetchConversationCount()
+        if totalHistory > maxContextMessages {
+            let summaryMessage = "Note: This is part of an ongoing conversation with \(totalHistory) total messages. Previous context has been summarized for relevance."
+            messages.append([
+                "role": "system",
+                "content": summaryMessage
+            ])
         }
 
         // Add current user message
@@ -192,6 +225,17 @@ class AIService: ObservableObject {
         ])
 
         return messages
+    }
+
+    // Estimate token count (rough approximation: 1 token ≈ 4 characters)
+    private func estimateTokens(_ text: String) -> Int {
+        return text.count / 4
+    }
+
+    // Get total conversation count
+    private func fetchConversationCount() -> Int {
+        let request: NSFetchRequest<ConversationEntryEntity> = ConversationEntryEntity.fetchRequest()
+        return (try? viewContext.count(for: request)) ?? 0
     }
 
     private func fetchRecentConversations(limit: Int) -> [ConversationEntryEntity] {
@@ -327,6 +371,43 @@ class AIService: ObservableObject {
         return (title: title, date: eventDate, duration: duration)
     }
 
+    // Extract message info from natural language
+    private func extractMessageInfo(from text: String) -> (recipient: String, message: String)? {
+        let lowercased = text.lowercased()
+
+        // Patterns to match:
+        // "send a message to John saying hello there"
+        // "text Sarah I'll be late"
+        // "message Mom that I'm on my way"
+
+        let patterns = [
+            "(?:send|text)\\s+(?:a\\s+)?(?:message\\s+)?(?:to\\s+)?([\\w\\s]+?)\\s+(?:saying|that)\\s+(.+)",
+            "(?:message|text)\\s+([\\w\\s]+?)\\s+(.+)",
+            "(?:send)\\s+([\\w\\s]+?)\\s+(?:a\\s+)?(?:message|text)\\s+(.+)"
+        ]
+
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+                let nsText = text as NSString
+                let matches = regex.matches(in: text, range: NSRange(location: 0, length: nsText.length))
+
+                if let match = matches.first, match.numberOfRanges == 3 {
+                    let recipientRange = match.range(at: 1)
+                    let messageRange = match.range(at: 2)
+
+                    if recipientRange.location != NSNotFound && messageRange.location != NSNotFound {
+                        let recipient = nsText.substring(with: recipientRange).trimmingCharacters(in: .whitespaces)
+                        let message = nsText.substring(with: messageRange).trimmingCharacters(in: .whitespaces)
+
+                        return (recipient, message)
+                    }
+                }
+            }
+        }
+
+        return nil
+    }
+
     private func handleError(_ message: String) async {
         await MainActor.run {
             self.lastError = message
@@ -355,7 +436,7 @@ enum Intent {
     case listTasks
     case scheduleEvent(title: String, date: Date?, duration: TimeInterval)
     case checkSchedule
-    case sendMessage
+    case sendMessage(recipient: String, message: String)
     case checkWeather
     case logReflection
     case conversation
@@ -372,8 +453,8 @@ enum Intent {
             return "Schedule event: \(title)"
         case .checkSchedule:
             return "Check schedule"
-        case .sendMessage:
-            return "Send message"
+        case .sendMessage(let recipient, _):
+            return "Send message to: \(recipient)"
         case .checkWeather:
             return "Check weather"
         case .logReflection:

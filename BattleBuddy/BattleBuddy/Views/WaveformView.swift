@@ -17,7 +17,7 @@ struct WaveformView: View {
     var body: some View {
         HStack(spacing: 3) {
             ForEach(0..<barCount, id: \.self) { index in
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: 3)
                     .fill(LinearGradient(
                         colors: [.bbAccent, .bbAccent.opacity(0.6)],
                         startPoint: .bottom,
@@ -25,7 +25,8 @@ struct WaveformView: View {
                     ))
                     .frame(width: 3)
                     .frame(height: barHeight(for: index))
-                    .animation(.easeInOut(duration: 0.15), value: bars)
+                    .shadow(color: .bbAccent.opacity(isActive ? 0.5 : 0), radius: 4, x: 0, y: 0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: bars)
             }
         }
         .frame(height: 60)
@@ -82,24 +83,41 @@ struct CircularWaveformView: View {
 
     var body: some View {
         ZStack {
-            // Outer ring
-            Circle()
-                .stroke(Color.bbAccent.opacity(0.3), lineWidth: 2)
-                .frame(width: 100, height: 100)
+            // Outer pulse rings
+            ForEach(0..<3) { index in
+                Circle()
+                    .stroke(Color.bbAccent.opacity(0.3 - Double(index) * 0.1), lineWidth: 2)
+                    .frame(width: 100 + CGFloat(index * 10), height: 100 + CGFloat(index * 10))
+                    .scaleEffect(isActive ? 1.0 + CGFloat(audioLevel) * 0.2 : 1.0)
+                    .animation(
+                        .easeInOut(duration: 0.3 + Double(index) * 0.1)
+                            .repeatCount(isActive ? .max : 0, autoreverses: true),
+                        value: audioLevel
+                    )
+            }
 
             // Animated pulse
             Circle()
-                .stroke(Color.bbAccent, lineWidth: 3)
-                .frame(width: 100 + CGFloat(audioLevel) * 40, height: 100 + CGFloat(audioLevel) * 40)
+                .stroke(Color.bbAccent, lineWidth: 4)
+                .frame(width: 100 + CGFloat(audioLevel) * 50, height: 100 + CGFloat(audioLevel) * 50)
                 .opacity(Double(1.0 - audioLevel))
-                .animation(.easeInOut(duration: 0.1), value: audioLevel)
+                .shadow(color: .bbAccent.opacity(0.5), radius: 10)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: audioLevel)
 
             // Inner circle
             Circle()
-                .fill(Color.bbAccent)
+                .fill(
+                    RadialGradient(
+                        colors: [.bbAccent, .bbAccent.opacity(0.7)],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 50
+                    )
+                )
                 .frame(width: 80, height: 80)
                 .scaleEffect(isActive ? 1.0 + CGFloat(audioLevel) * 0.3 : 1.0)
-                .animation(.easeInOut(duration: 0.1), value: audioLevel)
+                .shadow(color: .bbAccent.opacity(isActive ? 0.6 : 0.2), radius: isActive ? 20 : 10)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: audioLevel)
         }
     }
 }
