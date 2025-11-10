@@ -25,10 +25,14 @@ struct HomeView: View {
     @State private var isLoadingBrief = false
     @StateObject private var voiceService = VoiceService()
     @StateObject private var briefService: DailyBriefService
+    @StateObject private var proactiveService: ProactiveService
+    @StateObject private var costService: CostTrackingService
 
     init() {
         let context = PersistenceController.shared.container.viewContext
         _briefService = StateObject(wrappedValue: DailyBriefService(context: context))
+        _proactiveService = StateObject(wrappedValue: ProactiveService(context: context))
+        _costService = StateObject(wrappedValue: CostTrackingService(context: context))
     }
 
     var body: some View {
@@ -75,6 +79,41 @@ struct HomeView: View {
                         onSpeak: { speakDailyBrief() }
                     )
                     .padding(.horizontal)
+
+                    // Proactive Suggestion (Phase 6)
+                    if let suggestion = proactiveService.getTopSuggestion() {
+                        ProactiveSuggestionCard(suggestion: suggestion, service: proactiveService)
+                            .padding(.horizontal)
+                    }
+
+                    // Cost Warning (Phase 6)
+                    if costService.isApproachingBudget() || costService.isOverBudget() {
+                        NavigationLink(destination: CostDashboardView(context: viewContext)) {
+                            HStack {
+                                Image(systemName: costService.isOverBudget() ? "exclamationmark.triangle.fill" : "chart.bar.fill")
+                                    .foregroundColor(costService.isOverBudget() ? .red : .warningOrange)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(costService.isOverBudget() ? "Over Budget" : "Approaching Budget")
+                                        .font(.headline)
+                                        .foregroundColor(.bbTextPrimary)
+
+                                    Text("$\(costService.monthlySpend, specifier: "%.2f") spent this month")
+                                        .font(.caption)
+                                        .foregroundColor(.bbTextSecondary)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.bbTextSecondary)
+                            }
+                            .padding()
+                            .background(Color.bbCardBackground)
+                            .cornerRadius(12)
+                        }
+                        .padding(.horizontal)
+                    }
 
                     // Priority Tasks
                     VStack(alignment: .leading, spacing: 12) {
@@ -407,6 +446,67 @@ struct QuickActionButton: View {
             .padding()
             .background(color)
             .cornerRadius(12)
+        }
+    }
+}
+
+// MARK: - Proactive Suggestion Card (Phase 6)
+struct ProactiveSuggestionCard: View {
+    let suggestion: ProactiveSuggestionEntity
+    let service: ProactiveService
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: suggestionIcon)
+                .font(.title2)
+                .foregroundColor(.accentBlue)
+                .frame(width: 40)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Suggestion")
+                    .font(.caption.bold())
+                    .foregroundColor(.textSecondary)
+
+                Text(suggestion.suggestionText)
+                    .font(.subheadline)
+                    .foregroundColor(.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            Button(action: {
+                service.dismissSuggestion(suggestion)
+            }) {
+                Image(systemName: "xmark")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+            }
+        }
+        .padding()
+        .background(Color.accentBlue.opacity(0.1))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.accentBlue.opacity(0.3), lineWidth: 1)
+        )
+        .onAppear {
+            service.markAsShown(suggestion)
+        }
+    }
+
+    private var suggestionIcon: String {
+        switch suggestion.suggestionType {
+        case "morning_motivation": return "sunrise.fill"
+        case "progress_celebration": return "party.popper.fill"
+        case "gentle_nudge": return "hand.wave.fill"
+        case "break_reminder": return "cup.and.saucer.fill"
+        case "goal_check_in": return "target"
+        case "deadline_warning": return "exclamationmark.triangle.fill"
+        case "wellbeing_check": return "heart.fill"
+        case "mood_celebration": return "star.fill"
+        case "deadline_reminder": return "clock.fill"
+        default: return "lightbulb.fill"
         }
     }
 }

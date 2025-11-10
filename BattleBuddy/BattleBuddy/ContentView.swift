@@ -3,6 +3,7 @@
 //  BattleBuddy
 //
 //  Main navigation container with TabView
+//  Phase 6: Added Goals, Insights, and Cost tracking
 //
 
 import SwiftUI
@@ -10,6 +11,8 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: []) private var userProfile: FetchedResults<UserProfileEntity>
+    @State private var showOnboarding = false
 
     var body: some View {
         TabView {
@@ -31,11 +34,27 @@ struct ContentView: View {
                     Label("Tasks", systemImage: "checkmark.circle.fill")
                 }
 
+            // Goals Tab (Phase 6)
+            NavigationView {
+                GoalDashboardView(context: viewContext)
+            }
+            .tabItem {
+                Label("Goals", systemImage: "target")
+            }
+
             // Schedule Tab
             ScheduleView()
                 .tabItem {
                     Label("Schedule", systemImage: "calendar")
                 }
+
+            // Insights Tab (Phase 6)
+            NavigationView {
+                InsightsView(context: viewContext)
+            }
+            .tabItem {
+                Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
+            }
 
             // Reflection Tab
             ReflectionLogView()
@@ -50,6 +69,17 @@ struct ContentView: View {
                 }
         }
         .accentColor(appState.currentMode.accentColor)
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView()
+        }
+        .onAppear {
+            // Show onboarding on first launch
+            if let profile = userProfile.first {
+                showOnboarding = !profile.onboardingCompleted
+            } else {
+                showOnboarding = true
+            }
+        }
     }
 }
 

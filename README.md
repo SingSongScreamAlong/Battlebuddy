@@ -4,7 +4,9 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 
 ## Project Status
 
-**Current Phase:** Phase 5 - Polish & Integration ✅ COMPLETE - MVP FINISHED! 🎉
+**Current Phase:** Phase 6 - Intelligence & Companion Features ✅ COMPLETE! 🎉🚀
+
+**Previous Phase:** Phase 5 - Polish & Integration ✅ COMPLETE - MVP FINISHED! 🎉
 
 ### Phase 1: Core Foundation ✅
 
@@ -74,6 +76,28 @@ A voice-first AI assistant iOS app built with SwiftUI that acts as your personal
 - [x] **Smooth animations** - Spring-based animations for task completion and UI interactions
 - [x] **UI polish** - Refined transitions, shadows, and visual feedback throughout the app
 
+### Phase 6: Intelligence & Companion Features ✅
+
+- [x] **MemoryService** - Long-term memory system that learns user preferences, patterns, and goals
+- [x] **ProactiveService** - Intelligent suggestions and check-ins based on time, context, and behavior
+- [x] **GoalService** - Goal tracking with progress visualization and achievement system
+- [x] **CostTrackingService** - API usage monitoring with budget management and insights
+- [x] **Enhanced AIService** - Emotional intelligence, mood detection, and memory-aware conversations
+- [x] **Sentiment analysis** - Detects user emotion and adapts AI tone accordingly
+- [x] **Pattern learning** - Automatically learns from conversations (preferences, training, relationships)
+- [x] **Time-aware context** - AI knows time of day and day of week for contextual responses
+- [x] **OnboardingView** - Interactive tutorial with voice command guide and feature walkthrough
+- [x] **GoalDashboardView** - Goal creation, progress tracking, and achievement unlocking
+- [x] **InsightsView** - Mood trends, behavioral patterns, and personalized analytics
+- [x] **CostDashboardView** - Budget tracking, spending charts, and cost-saving tips
+- [x] **Proactive suggestions** - Context-aware suggestions displayed in HomeView
+- [x] **Budget alerts** - Real-time warnings when approaching or exceeding API budget
+- [x] **Achievement system** - 13 unlockable achievements for app engagement
+- [x] **User profile stats** - Track streaks, total conversations, and goals completed
+- [x] **Mood-aware AI** - AI adapts personality based on recent reflection log moods
+- [x] **Preference memory** - AI remembers likes, dislikes, and important people
+- [x] **Cost transparency** - Track every API call with accurate token usage and cost estimates
+
 ## Requirements
 
 - **iOS:** 17.0+
@@ -131,28 +155,42 @@ BattleBuddy/
 ├── ContentView.swift             # Main TabView navigation
 ├── Info.plist                    # App configuration and permissions
 ├── Models/
-│   ├── PersistenceController.swift           # Core Data stack
-│   ├── BattleBuddy.xcdatamodeld/            # Core Data model
+│   ├── PersistenceController.swift                   # Core Data stack
+│   ├── BattleBuddy.xcdatamodeld/                    # Core Data model
 │   ├── TaskEntity+CoreDataClass.swift
 │   ├── UserPreferencesEntity+CoreDataClass.swift
 │   ├── ReflectionLogEntity+CoreDataClass.swift
-│   └── ConversationEntryEntity+CoreDataClass.swift
+│   ├── ConversationEntryEntity+CoreDataClass.swift
+│   ├── GoalEntity+CoreDataClass.swift                # Phase 6 ✅
+│   ├── AIMemoryEntity+CoreDataClass.swift            # Phase 6 ✅
+│   ├── CostTrackingEntity+CoreDataClass.swift        # Phase 6 ✅
+│   ├── ProactiveSuggestionEntity+CoreDataClass.swift # Phase 6 ✅
+│   ├── AchievementEntity+CoreDataClass.swift         # Phase 6 ✅
+│   └── UserProfileEntity+CoreDataClass.swift         # Phase 6 ✅
 ├── Views/
-│   ├── HomeView.swift            # Dashboard with daily brief
-│   ├── VoiceInterfaceView.swift  # Voice conversation UI (Phase 2)
-│   ├── TaskBoardView.swift       # Task management
-│   ├── ScheduleView.swift        # Calendar integration (Phase 3)
-│   ├── ReflectionLogView.swift   # Daily mood tracking
-│   └── SettingsView.swift        # User preferences
+│   ├── HomeView.swift                   # Dashboard with proactive suggestions (Phase 6 ✅)
+│   ├── VoiceInterfaceView.swift         # Voice conversation UI (Phase 2)
+│   ├── TaskBoardView.swift              # Task management
+│   ├── ScheduleView.swift               # Calendar integration (Phase 3)
+│   ├── ReflectionLogView.swift          # Daily mood tracking
+│   ├── SettingsView.swift               # User preferences
+│   ├── OnboardingView.swift             # Interactive tutorial (Phase 6 ✅)
+│   ├── GoalDashboardView.swift          # Goal tracking & achievements (Phase 6 ✅)
+│   ├── InsightsView.swift               # Mood trends & analytics (Phase 6 ✅)
+│   └── CostDashboardView.swift          # Budget management (Phase 6 ✅)
 ├── Services/
-│   ├── VoiceService.swift        # Speech-to-text/text-to-speech (Phase 2 ✅)
-│   ├── AIService.swift           # OpenAI integration with smart context (Phase 2 ✅, Phase 5 ✅)
-│   ├── TaskService.swift         # Task management logic (Phase 2 ✅)
-│   ├── CalendarService.swift     # EventKit wrapper (Phase 3 ✅)
-│   ├── NotificationService.swift # Local notifications (Phase 4 ✅)
-│   ├── WeatherService.swift      # OpenWeather API integration (Phase 4 ✅)
-│   ├── DailyBriefService.swift   # Intelligent brief generation (Phase 4 ✅)
-│   └── MessageService.swift      # iMessage integration (Phase 5 ✅)
+│   ├── VoiceService.swift               # Speech-to-text/text-to-speech (Phase 2 ✅)
+│   ├── AIService.swift                  # OpenAI with emotional intelligence (Phase 2, 5, 6 ✅)
+│   ├── TaskService.swift                # Task management logic (Phase 2 ✅)
+│   ├── CalendarService.swift            # EventKit wrapper (Phase 3 ✅)
+│   ├── NotificationService.swift        # Local notifications (Phase 4 ✅)
+│   ├── WeatherService.swift             # OpenWeather API integration (Phase 4 ✅)
+│   ├── DailyBriefService.swift          # Intelligent brief generation (Phase 4 ✅)
+│   ├── MessageService.swift             # iMessage integration (Phase 5 ✅)
+│   ├── MemoryService.swift              # Long-term learning (Phase 6 ✅)
+│   ├── ProactiveService.swift           # Intelligent suggestions (Phase 6 ✅)
+│   ├── GoalService.swift                # Goal & achievement system (Phase 6 ✅)
+│   └── CostTrackingService.swift        # API usage monitoring (Phase 6 ✅)
 └── Utilities/
     ├── ColorExtension.swift      # Theme colors
     ├── KeychainHelper.swift      # Secure API key storage (Phase 2 ✅)
@@ -218,6 +256,27 @@ BattleBuddy/
 - Automatic context pruning for optimal performance
 - Spring-based UI animations for smooth interactions
 - Polished visual feedback and transitions throughout app
+
+### Phase 6: Intelligence & Companion Features ✅
+
+- **True AI Companion** - The app now truly acts as a personal wingman that knows you
+- **Long-term memory system** - Remembers preferences, patterns, people, and goals across sessions
+- **Emotional intelligence** - Detects mood from reflections and adapts AI tone accordingly
+- **Proactive suggestions** - Context-aware suggestions based on time, tasks, mood, and behavior
+- **Goal tracking with achievements** - Set goals, track progress, unlock 13 achievements
+- **Cost transparency** - Track every API call with accurate token counting and budget alerts
+- **Pattern learning** - Automatically learns from conversations (likes, dislikes, training, relationships)
+- **Time-aware AI** - Knows time of day, day of week, and adjusts personality accordingly
+- **Interactive onboarding** - Beautiful tutorial with voice command guide for first-time users
+- **Mood trend analysis** - Visualize 7-day mood patterns with insights and wellbeing suggestions
+- **Budget management** - Set monthly budget, get alerts, view spending charts and projections
+- **User profile stats** - Track streaks, total conversations, tasks completed, and goals achieved
+- **Memory insights** - View what the AI has learned about you in the Insights tab
+- **Behavioral analytics** - See patterns in workout times, productivity peaks, and habits
+- **Cost-saving tips** - AI suggests ways to reduce API usage and stay within budget
+- **Proactive check-ins** - Morning motivation, break reminders, goal progress nudges
+- **Achievement gamification** - Unlock badges for streaks, tasks, conversations, and goals
+- **Enhanced HomeView** - Shows proactive suggestions and budget warnings front and center
 
 ## Design System
 
@@ -341,19 +400,23 @@ Reflections are stored chronologically with mood emoji indicators.
 - Contacts permission required for message recipient lookup
 - Message sending requires iOS device (not available in simulator)
 
-## Future Enhancements (Post-MVP)
+## Future Enhancements (Post-Phase 6)
 
-- Apple Watch companion app
+- Apple Watch companion app with goal and achievement sync
 - Wake word detection ("Hey BattleBuddy")
-- Web research capabilities
-- Goal tracking with progress visualization
-- Multi-user support
-- Siri Shortcuts integration
-- iPad and Mac versions
+- Web research capabilities for fact-checking
+- ~~Goal tracking with progress visualization~~ ✅ **Completed in Phase 6**
+- Multi-user support with family sharing
+- Siri Shortcuts integration for voice automation
+- iPad and Mac versions with optimized layouts
+- Offline mode with cached AI responses
+- Cloud sync via CloudKit for cross-device memory
+- Social features - share achievements with friends
+- Advanced analytics - monthly reports and insights
 
 ## Contributing
 
-This is an MVP development project. Phases are built incrementally following the development brief.
+This is an actively developed project. Phases are built incrementally following the development brief.
 
 ## License
 
@@ -362,5 +425,16 @@ Copyright © 2025. All rights reserved.
 ---
 
 **Built with:** Swift 5.9, SwiftUI, Core Data, EventKit, UserNotifications, CoreLocation, MessageUI, Contacts, iOS Speech Framework, AVFoundation
-**Status:** Phase 5 Complete - MVP FINISHED! All planned features implemented. 🎉
-**Version:** 5.0.0 (MVP Complete)
+
+**Status:** Phase 6 Complete - TRUE AI COMPANION FEATURES ADDED! 🎉🚀
+
+**Version:** 6.0.0 (Intelligence & Companion Update)
+
+**What's New in Phase 6:**
+- 🧠 Long-term memory that learns your preferences
+- 💡 Proactive suggestions based on context and time
+- 🎯 Goal tracking with 13 unlockable achievements
+- 💰 Budget tracking with spending insights
+- 😊 Mood-aware AI that adapts to your emotional state
+- 📊 Analytics dashboard showing patterns and trends
+- 🎓 Interactive onboarding for new users
