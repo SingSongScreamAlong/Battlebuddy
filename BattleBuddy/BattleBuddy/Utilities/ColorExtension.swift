@@ -43,4 +43,14 @@ extension Color {
     static let bbTextSecondary = Color(hex: "#9ca3af")
     static let bbSuccess = Color(hex: "#10b981")
     static let bbWarning = Color(hex: "#f59e0b")
+
+    // Phase 6: Additional color aliases for consistency
+    static let battleBackground = bbBackground
+    static let cardBackground = bbCardBackground
+    static let accentBlue = bbAccent
+    static let secondaryGray = bbSecondary
+    static let textPrimary = bbTextPrimary
+    static let textSecondary = bbTextSecondary
+    static let successGreen = bbSuccess
+    static let warningOrange = bbWarning
 }

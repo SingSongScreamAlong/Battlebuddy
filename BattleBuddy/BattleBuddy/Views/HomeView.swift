@@ -498,7 +498,7 @@ struct ProactiveSuggestionCard: View {
     private var suggestionIcon: String {
         switch suggestion.suggestionType {
         case "morning_motivation": return "sunrise.fill"
-        case "progress_celebration": return "party.popper.fill"
+        case "progress_celebration": return "star.circle.fill"
         case "gentle_nudge": return "hand.wave.fill"
         case "break_reminder": return "cup.and.saucer.fill"
         case "goal_check_in": return "target"
